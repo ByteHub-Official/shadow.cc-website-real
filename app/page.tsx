@@ -14,6 +14,54 @@ interface CartItem {
   quantity: number
 }
 
+// Loading Screen Component
+function LoadingScreen({ onFinish }: { onFinish: () => void }) {
+  const [progress, setProgress] = useState(0)
+  const [fadeOut, setFadeOut] = useState(false)
+
+  useEffect(() => {
+    const duration = 1800
+    const interval = 16
+    const steps = duration / interval
+    let step = 0
+
+    const timer = setInterval(() => {
+      step++
+      const eased = 1 - Math.pow(1 - step / steps, 3)
+      setProgress(Math.min(Math.round(eased * 100), 100))
+      if (step >= steps) {
+        clearInterval(timer)
+        setTimeout(() => {
+          setFadeOut(true)
+          setTimeout(onFinish, 500)
+        }, 300)
+      }
+    }, interval)
+
+    return () => clearInterval(timer)
+  }, [onFinish])
+
+  return (
+    <div className={`fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center transition-opacity duration-500 ${fadeOut ? 'opacity-0' : 'opacity-100'}`}>
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <span className="text-3xl font-bold text-white">Shadow.CC</span>
+      </div>
+      <div className="w-64 h-1 bg-zinc-800 rounded-full overflow-hidden mb-4">
+        <div
+          className="h-full bg-red-600 rounded-full transition-all duration-100"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <p className="text-gray-500 text-sm font-mono">{progress}%</p>
+    </div>
+  )
+}
+
 // Particle Background Component
 function ParticleBackground() {
   useEffect(() => {
@@ -31,7 +79,7 @@ function ParticleBackground() {
     window.addEventListener('resize', resize)
 
     const particles: { x: number; y: number; vx: number; vy: number; size: number }[] = []
-    const particleCount = 80
+    const particleCount = window.innerWidth < 640 ? 30 : 80
 
     for (let i = 0; i < particleCount; i++) {
       particles.push({
@@ -87,16 +135,18 @@ function ParticleBackground() {
 
 // Header Component
 function Header({ cartCount, onCartClick }: { cartCount: number; onCartClick: () => void }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-red-900/30">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         <a href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-red-600 rounded-lg flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <span className="text-xl font-bold text-white group-hover:text-red-500 transition-colors">Shadow.CC</span>
+          <span className="text-lg sm:text-xl font-bold text-white group-hover:text-red-500 transition-colors">Shadow.CC</span>
         </a>
         
         <nav className="hidden md:flex items-center gap-8">
@@ -106,21 +156,52 @@ function Header({ cartCount, onCartClick }: { cartCount: number; onCartClick: ()
           <a href="/support" className="text-gray-300 hover:text-red-500 transition-colors">Support</a>
         </nav>
 
-        <button
-          onClick={onCartClick}
-          className="relative bg-red-600/20 hover:bg-red-600/30 border border-red-600/50 rounded-lg px-4 py-2 flex items-center gap-2 transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          <span className="text-white font-medium">Cart</span>
-          {cartCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-              {cartCount}
-            </span>
-          )}
-        </button>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={onCartClick}
+            className="relative bg-red-600/20 hover:bg-red-600/30 border border-red-600/50 rounded-lg px-3 py-2 sm:px-4 flex items-center gap-2 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span className="text-white font-medium hidden sm:inline">Cart</span>
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-lg p-2 transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? (
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile nav dropdown */}
+      {mobileMenuOpen && (
+        <nav className="md:hidden border-t border-red-900/30 bg-black/95 backdrop-blur-md">
+          <div className="flex flex-col px-4 py-3">
+            <a href="#products" onClick={() => setMobileMenuOpen(false)} className="text-gray-300 hover:text-red-500 transition-colors py-3 border-b border-zinc-800">Products</a>
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-gray-300 hover:text-red-500 transition-colors py-3 border-b border-zinc-800">Features</a>
+            <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="text-gray-300 hover:text-red-500 transition-colors py-3 border-b border-zinc-800">FAQ</a>
+            <a href="/support" onClick={() => setMobileMenuOpen(false)} className="text-gray-300 hover:text-red-500 transition-colors py-3">Support</a>
+          </div>
+        </nav>
+      )}
     </header>
   )
 }
@@ -128,17 +209,17 @@ function Header({ cartCount, onCartClick }: { cartCount: number; onCartClick: ()
 // Hero Section
 function Hero() {
   return (
-    <section className="pt-32 pb-20 px-6">
+    <section className="pt-28 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 bg-red-600/20 border border-red-600/50 rounded-full px-4 py-2 mb-6">
+        <div className="inline-flex items-center gap-2 bg-red-600/20 border border-red-600/50 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 mb-4 sm:mb-6">
           <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-          <span className="text-red-400 text-sm font-medium">Undetected & Updated Daily</span>
+          <span className="text-red-400 text-xs sm:text-sm font-medium">Undetected & Updated Daily</span>
         </div>
-        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight text-balance">
           Dominate Every<br />
           <span className="text-red-500">Roblox Game</span>
         </h1>
-        <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
+        <p className="text-base sm:text-xl text-gray-400 mb-6 sm:mb-8 max-w-2xl mx-auto text-pretty">
           Premium Roblox scripts with advanced features, instant delivery, and 24/7 support. Join thousands of satisfied users.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -171,10 +252,10 @@ function Hero() {
 // Stats Section
 function Stats() {
   return (
-    <section className="py-12 px-6 border-y border-red-900/30 bg-black/50">
-      <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+    <section className="py-8 sm:py-12 px-4 sm:px-6 border-y border-red-900/30 bg-black/50">
+      <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
         <div className="text-center">
-          <div className="text-3xl font-bold text-red-500">10k+</div>
+          <div className="text-2xl sm:text-3xl font-bold text-red-500">10k+</div>
           <div className="text-gray-400 text-sm">Active Users</div>
         </div>
         <div className="text-center">
@@ -274,21 +355,21 @@ function ProductCard({ product, onAddToCart, stock }: { product: Product; onAddT
 // Products Section
 function Products({ onAddToCart, stock }: { onAddToCart: (product: Product) => void; stock: Record<string, number> }) {
   return (
-    <section id="products" className="py-20 px-6">
+    <section id="products" className="py-12 sm:py-20 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-4xl font-bold text-white text-center mb-4">Choose Your Plan</h2>
-        <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+        <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-3 sm:mb-4 text-balance">Choose Your Plan</h2>
+        <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl mx-auto text-sm sm:text-base">
           Select the key duration that works best for you. All plans include full script access and instant delivery.
         </p>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {PRODUCTS.map(product => (
             <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} stock={stock[product.id] || 0} />
           ))}
         </div>
 
-        <div className="mt-12 text-center">
-          <div className="inline-flex items-center gap-6 text-sm text-gray-400">
+        <div className="mt-8 sm:mt-12 text-center">
+          <div className="inline-flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-xs sm:text-sm text-gray-400">
             <span className="flex items-center gap-2">
               <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -326,13 +407,13 @@ function ScriptFeatures() {
   ]
 
   return (
-    <section id="features" className="py-20 px-6 bg-black/50">
+    <section id="features" className="py-12 sm:py-20 px-4 sm:px-6 bg-black/50">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-4xl font-bold text-white text-center mb-4">Powerful Features</h2>
-        <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+        <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-3 sm:mb-4 text-balance">Powerful Features</h2>
+        <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl mx-auto text-sm sm:text-base">
           Our script includes everything you need to dominate any Roblox game.
         </p>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           {features.map((f, i) => (
             <div key={i} className="bg-zinc-900/50 border border-red-900/30 rounded-xl p-6 hover:border-red-600/50 transition-colors">
               <div className="w-12 h-12 bg-red-600/20 rounded-lg flex items-center justify-center mb-4">
@@ -355,15 +436,15 @@ function SupportedGames() {
   const games = ['Blox Fruits', 'Pet Simulator X', 'Arsenal', 'Murder Mystery 2', 'Jailbreak', 'Adopt Me', 'Tower of Hell', 'King Legacy']
   
   return (
-    <section className="py-20 px-6">
+    <section className="py-12 sm:py-20 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-4xl font-bold text-white text-center mb-4">Supported Games</h2>
-        <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+        <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-3 sm:mb-4 text-balance">Supported Games</h2>
+        <p className="text-gray-400 text-center mb-8 sm:mb-12 max-w-2xl mx-auto text-sm sm:text-base">
           Works with 50+ popular Roblox games and counting.
         </p>
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
           {games.map((game, i) => (
-            <span key={i} className="bg-zinc-900 border border-red-900/30 rounded-full px-6 py-3 text-white font-medium hover:border-red-500 transition-colors">
+            <span key={i} className="bg-zinc-900 border border-red-900/30 rounded-full px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base text-white font-medium hover:border-red-500 transition-colors">
               {game}
             </span>
           ))}
@@ -385,9 +466,9 @@ function FAQ() {
   ]
 
   return (
-    <section id="faq" className="py-20 px-6 bg-black/50">
+    <section id="faq" className="py-12 sm:py-20 px-4 sm:px-6 bg-black/50">
       <div className="max-w-3xl mx-auto">
-        <h2 className="text-4xl font-bold text-white text-center mb-12">Frequently Asked Questions</h2>
+        <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-8 sm:mb-12">Frequently Asked Questions</h2>
         <div className="space-y-4">
           {faqs.map((faq, i) => (
             <div key={i} className="bg-zinc-900/50 border border-red-900/30 rounded-xl overflow-hidden">
@@ -416,8 +497,8 @@ function FAQ() {
 // Footer
 function Footer() {
   return (
-    <footer className="py-12 px-6 border-t border-red-900/30">
-      <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+    <footer className="py-8 sm:py-12 px-4 sm:px-6 border-t border-red-900/30">
+      <div className="max-w-5xl mx-auto flex flex-col items-center gap-4 sm:gap-6 md:flex-row md:justify-between">
         <a href="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -572,9 +653,9 @@ function CheckoutModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <div className="relative w-full max-w-2xl bg-[#0a0a0a] border border-red-900/30 rounded-2xl overflow-hidden">
+      <div className="relative w-full sm:max-w-2xl bg-[#0a0a0a] border border-red-900/30 rounded-t-2xl sm:rounded-2xl overflow-hidden max-h-[90vh]">
         <div className="flex items-center justify-between p-6 border-b border-red-900/30">
           <h2 className="text-xl font-bold text-white">Complete Your Purchase</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
@@ -624,6 +705,7 @@ function CheckoutModal({
 
 // Main Page Component
 export default function ShopPage() {
+  const [loading, setLoading] = useState(true)
   const [cart, setCart] = useState<CartItem[]>([])
   const [cartOpen, setCartOpen] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
@@ -678,6 +760,7 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      {loading && <LoadingScreen onFinish={() => setLoading(false)} />}
       <ParticleBackground />
       <Header cartCount={cartCount} onCartClick={() => setCartOpen(true)} />
       <main className="relative z-10">
