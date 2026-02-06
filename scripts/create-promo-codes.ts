@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '')
 
 async function createPromoCodes() {
   const codes = [
@@ -17,9 +17,8 @@ async function createPromoCodes() {
         active: true,
       })
       console.log(`Created promotion code: ${promoCode.code} (${promoCode.id})`)
-    } catch (error: unknown) {
-      const err = error as Error
-      console.error(`Failed to create code ${code}:`, err.message)
+    } catch (error) {
+      console.error(`Failed to create code ${code}:`, error?.message || error)
     }
   }
 
