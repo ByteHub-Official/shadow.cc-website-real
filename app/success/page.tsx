@@ -81,9 +81,9 @@ export default function SuccessPage() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="min-h-screen bg-black flex items-center justify-center px-4 py-8">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sm:p-8 max-w-md w-full text-center">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -110,15 +110,15 @@ export default function SuccessPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-lg w-full">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-green-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+    <div className="min-h-screen bg-black flex items-center justify-center px-4 py-8">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 sm:p-8 max-w-lg w-full">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-10 h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Payment Successful!</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Payment Successful!</h1>
           <p className="text-gray-400">Thank you for your purchase</p>
           {customerEmail && (
             <p className="text-gray-500 text-sm mt-1">Receipt sent to {customerEmail}</p>
@@ -127,15 +127,15 @@ export default function SuccessPage() {
 
         {/* Display all claimed keys */}
         {claimedKeys.map((claimed, index) => (
-          <div key={index} className="bg-black border border-zinc-700 rounded-xl p-6 mb-4">
-            <div className="flex items-center justify-between mb-3">
+          <div key={index} className="bg-black border border-zinc-700 rounded-xl p-4 sm:p-6 mb-4">
+            <div className="flex items-center justify-between mb-3 gap-2">
               <span className="text-gray-400 text-sm font-medium">
                 {productNames[claimed.productId] || 'LICENSE KEY'} #{index + 1}
               </span>
               <span className="bg-red-600/20 text-red-400 text-xs px-2 py-1 rounded">SAVE THIS</span>
             </div>
             <div className="flex items-center gap-3">
-              <code className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-lg font-mono text-white tracking-wider overflow-x-auto">
+              <code className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-lg font-mono text-white tracking-wider overflow-x-auto break-all min-w-0">
                 {claimed.key}
               </code>
               <button
@@ -182,10 +182,10 @@ export default function SuccessPage() {
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Link
             href="/"
-            className="flex-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-center"
+            className="flex-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-center text-sm sm:text-base"
           >
             Back to Shop
           </Link>
@@ -193,7 +193,7 @@ export default function SuccessPage() {
             href="https://discord.gg/shadow"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-center"
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-center text-sm sm:text-base"
           >
             Join Discord
           </a>

@@ -11,33 +11,33 @@ export default function SupportPage() {
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-red-900/30">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-red-600 rounded-lg flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <span className="text-xl font-bold text-white group-hover:text-red-500 transition-colors">Shadow.CC</span>
+            <span className="text-lg sm:text-xl font-bold text-white group-hover:text-red-500 transition-colors">Shadow.CC</span>
           </Link>
-          <nav className="flex items-center gap-8">
-            <Link href="/" className="text-gray-300 hover:text-red-500 transition-colors">Shop</Link>
+          <nav className="flex items-center gap-4 sm:gap-8">
+            <Link href="/" className="text-gray-300 hover:text-red-500 transition-colors text-sm sm:text-base">Shop</Link>
           </nav>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="pt-32 pb-20 px-6">
+      <main className="pt-28 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
           {/* Page Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 sm:mb-12">
             <div className="inline-flex items-center gap-2 bg-red-600/20 border border-red-600/50 rounded-full px-4 py-2 mb-6">
               <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
               <span className="text-red-400 text-sm font-medium">Support Center</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 text-balance">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 text-balance">
               Need Help?
             </h1>
             <p className="text-gray-400 text-lg max-w-xl mx-auto text-pretty">
@@ -46,7 +46,7 @@ export default function SupportPage() {
           </div>
 
           {/* Contact Cards */}
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
             {/* Email Card */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center text-center hover:border-red-900/50 transition-colors">
               <div className="w-14 h-14 bg-red-600/20 rounded-xl flex items-center justify-center mb-5">
@@ -87,7 +87,7 @@ export default function SupportPage() {
           </div>
 
           {/* Common Issues */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 mb-12">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 sm:p-8 mb-8 sm:mb-12">
             <h2 className="text-2xl font-bold text-white mb-6">Common Issues</h2>
             <div className="space-y-6">
               <div className="border-b border-zinc-800 pb-6">
@@ -135,8 +135,8 @@ export default function SupportPage() {
       </main>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t border-red-900/30">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+      <footer className="py-8 sm:py-12 px-4 sm:px-6 border-t border-red-900/30">
+        <div className="max-w-5xl mx-auto flex flex-col items-center gap-4 sm:gap-6 md:flex-row md:justify-between">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
