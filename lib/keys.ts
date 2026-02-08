@@ -1,5 +1,4 @@
 import { Redis } from '@upstash/redis'
-import crypto from 'crypto'
 
 const redis = new Redis({
   url: process.env.KV_REST_API_URL!,
@@ -8,55 +7,124 @@ const redis = new Redis({
 
 // Redis key naming:
 //   keys:{productId}  -> List of available keys for that product
-//   keys:seeded       -> Flag to prevent duplicate seeding
+//   keys:seeded:v3    -> Versioned flag to track seeding (bump version to force re-seed)
 
-const PRODUCT_IDS = ['shadow-weekly', 'shadow-monthly', 'shadow-lifetime']
+const SEED_FLAG = 'keys:seeded:v3'
+const PRODUCT_IDS = ['shadow-weekly', 'shadow-monthly', 'shadow-lifetime'] as const
 
-const DEFAULT_STOCK: Record<string, number> = {
-  'shadow-weekly': 999,
-  'shadow-monthly': 500,
-  'shadow-lifetime': 100,
-}
-
-function generateKey(): string {
-  return `SHADOW-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`
+// Actual keys from data/keys.txt
+const STOCK_KEYS: Record<string, string[]> = {
+  'shadow-weekly': [
+    'DOPNkEWOdJGYahufUKTQnQqJgQSrsuUy','aultjeIMWYHznwPqVVaEoxPZHslOfJnh',
+    'ZabFmCDPvIAovuiFJnDrYHLDmcMNXTsr','JOiZuDjbAbpptTVfvOaNrmgLrAlMZXsI',
+    'kPAGUyOlIhHiHTVZQUcCDkmfwkKLBmjC','kZdrsWkzdscojDHaBBaDfDKwMPfwMBKV',
+    'cOPhqDJweWDGbIWepBrhGDgdJVZXuHeQ','bxRIlwThWnRAXhaXPQYwkQaWtMsPJLvj',
+    'CepFWHvqugAZODbUJUZdWqrHcvWlxakJ','vPnZFCwJdhCfxHBPWucUMjHNEHtjjOGF',
+    'WkhJFtsPCbENChKnWvyBPjoQNJnWrTGk','GRzdzxXaJAYwpOqIRqjwicpLzMDqfiXF',
+    'MdMYpeIyztFmatzkGEblxEROYKGQRRUo','xTPsYnVZAuEyRfVTPjLgNCJCjEXrnNyc',
+    'QzawqTJgYBSAOTRmvpOOMBzPbCcwvWIH','mryZeMoNSpyPEDJuSvTHunTkBWXCQrqy',
+    'TwSyROdwgaLYcBKDFwvPsgocvSXbrCTh','IGOQdGhEDsJFiktVBrcjtCgxaGKFldRd',
+    'IRjLbypvYzeCLlxyFcRgxhwOUIPnuXpO','duqVaiJfgJptCCzfVOlDpLrzdeWWjiea',
+    'aqEFxxTssLtJNdOhwbszJlbbtAwCSnYP','tzZetnjhkcPsIRBumDUrHmUAOWumeUwz',
+    'aeirUtBJpYsQFaFveOKSdQTKVADFzAOo','WbbbQxnsTjeRoRkLtoWNhbVAzhsNAfPj',
+    'DTGesQgyxZIefmAHGCXgdoXwYmWueSSl','SMFfDjXJJZrKsQTQfgFfjtuZjQVaEHqq',
+    'arzqRJyHBXyebHUnHTBdhUaVxDHbwMLy','pMOhqdeZSucqNDVNbqBZbrhMNdbVNwyu',
+    'AgCHZYzwYCMjUDRSiBTJdsCEvtPUhQeX','QapGqtJaValcPKtsNQbPBzHvNQKwCKuO',
+    'KHLyfkvPDOMAdRXbCBIVXlcMuxiskSzS','bSxPgDoHISrJkncWonkyjRIvBcgUxZfz',
+    'TulxpHEKZWxAjMRVrbXUAZquibpyrmyr','fBKKvyKpDjfZJIDjtZriVUvHGTemeBza',
+    'zcXbpKEobJzHolMpYhioqyInmQGunGnb','stfIwsiJtAbLhfnuywxnIpwcNCgHPRXg',
+    'kKfbxffAiZrpufDCVgbmwahvrdEhbIkg','PYExmeSfQlKrGgAHYRmxScXItUIAIKgc',
+    'FbFnYhusSUscuvPbIuuuWdQtMvqAoNFY','UXdMFKzlvrUOqLoyWgIhDOPvrGsrguaZ',
+    'CYcYZGgzDUUffxfPPsKSlLnGkYsLxQTB','WMZmErPHqekANOKOMwLbpimxDOSSNvAT',
+    'GITzfinZMjSXMvOrOkZsGrfmSEPOQoGl','vFGvQRyqyyKwleAsRnHxKgGICeDkNYGi',
+    'ZlIFgYMOJmCWyurUbodMwkqerwzGLVyT','CngGhThzZbRgoVKwrIORntRgEENrWApL',
+    'FMgBHbPfqRrtuWgekJzsRwLiOurmHcwk','qjVAfwmwlIZLnQHneqVvLsVzAcpkLsIX',
+    'gzhYKAyDvkKZCHDuwFFylmCgfrcqqlfH','RdjQGSBgGALiQxowTBDauwkIMCwvMnxR',
+  ],
+  'shadow-monthly': [
+    'dXdQijzNzktbbaazeVYdpVcqGdKkttHl','mmFPJJRuGQjLHlXopWiAzgCJORFKOLHB',
+    'rLzsIJEdhEokvPfPOQSpvwhgfuGHHeEv','lJTXECzkvUGMfQrSDANywabnCppkxwaB',
+    'SNebYgqXCEjqbWeSBZFSOyqPuYyBtCAE','xRHjcIHQoHXSTjgDzTZRmTkwIaTKDthq',
+    'rIGXGRzUbzrzayBAbgfMqOnRCVztEFMc','iZBRgTaIhSFejqFAnnixOvftbgpDFGVw',
+    'EaopApEMBgLyZWfYAUvrUsWaPjLAWyfF','pahnoadmhSltUqjuJCauJIGpKbHLbXzu',
+    'KCnLDgWnpQBtKJBQnLdcnPBOgWpJTEft','aqJGMJFaTXbBlAxCVWWTfgjzJezJnCzX',
+    'dcpCtrZGXChSyKeZmXOFkIHQNbcpoUih','iMcYJUPCLNXKiHWVUbqZHDNHLVKPrPjf',
+    'nybaGClBeuWTNpAviYehMNODiaJbwDSu','kUqOwXxFCXgniUuNbUfbscEyJXuaVfwU',
+    'sgExBOFAVsftSwczlpsQIdbuoLajDEPZ','ubuOstXpAYmRrfHYUJsAUEHlGmzOEjYv',
+    'RskTkjgVOveJZIELPUoeMbhHnsUnLLGp','bXiQQfdtZHrfFikqlqpvFKDJytwINuCX',
+    'UvHjgYrFEvWgJLsbKynRKQTfHafQOdMT','NxIRxzUdwlxaNaXQjaWAtRHZuCdZOvPJ',
+    'XlBDdbdZKLZdDoEEbHSuueHswfSsbnQK','nvhEwrevSCpsrFjskfotoPxNinfnGSpD',
+    'rtqseXvNjjPowVRImqnCNtoLhFxpTMPL','nutKaVHjwFMlPRzOyGLHxvfffCkjgXDy',
+    'MylWgouqlsUscQuBycYCPatxUaBxnUBy','SgYSlfdUizflHeZtAnlaVkgOPIxSqYQJ',
+    'gDZpVygAFTpxnIvhjkreaJpQayPeTipl','vWekMjowAUybzYScgDtBSycXgWiUctGX',
+    'COIvxBHeqXUFXyGieImBMzDnkRmUNdwe','oYkfVWrmETigWFDKlGjAiBaoxuZeJEyp',
+    'VfAXUwFsvuNgoQjGeNEihVlgKInvsoDb','YogUgIfXShPSpzSfhkVazRAeOZOERBpQ',
+    'wXEqHgJDTJvdcRJXoddyvhHgMqnAuEUw','NikHXfjCXUqMaObJmUkyoHDoXsBmqpBf',
+    'aJqugvLeaZRleIaGUBxdqmVjqclAjyUO','AvmQJaBNnPNNiyemkOCuigDKFevnIDnA',
+    'LWQrayILEvBebFKzqPSFlZbXwNbedniy','NXjESRCSSxewhXfTwclyorfuIIPfeeBe',
+    'ncFuTlDHIiHAuegmEDoowuGAxpXZhiod','ccRMfYpLAYnlchJHjBEKwzxPoatWVijd',
+    'uvAzkctDpvxoNmgUzaNXPljzAcFogFir','AMrwINhnidLMXvLZwflglbepKCUiTYww',
+    'hWdDhPqyxVXBdzjqnTnJiFwnzGBMYBTD','REoRuSWHhqKHrTgCZGhJxUmfOoaMAKvn',
+    'FgwrTOCKfLdpHcZsugNuKhZOZBWvVlZT','rjOlPLgpUBauvnlRjzaobjFPqkbLnoBN',
+    'DhAsCSdwrIrtlmULIdxDZQNnUUGZjORN','FFIUUgCXjSwddMvgUKXshFMwOspdlVNs',
+  ],
+  'shadow-lifetime': [
+    'ZrJVXLpDMhSXrFrcOyCgbfECeNjbXkts','iciEIMDDfqhcpsyAWUTrSlWGjVcBotpv',
+    'MbEmKVpoJOBOgiIlTDYdbNdYuYyunJVx','CaveYXHaBQAxLTnOFCvinKcdedcMtBvM',
+    'SIMOdDAXkZnUALHlKLYvWbrQahrDHVQU','QOSWvEuPOdUIopjPjyqKSwZvQYDCxykj',
+    'DOQgPPCQtDyjreKjEzUytemCdDBDsESC','LZaknEBRBVGymACaUguyrJRiAQcZWmsV',
+    'URERbqNiohZlogyedtToZWSiMIfLNiqk','aoWFjoLLZPjmMfGQPnxcjYLClpPUOAZP',
+    'RJpkyebErWJoXAESuLHLuvySeQDiBmKs','NAOAvZxbfeuJuDnibJufUmphsWdgMsbe',
+    'TNodaTVddPAsrWnBvzJuYazWtdWbZkSZ','AHewnsNApCYhplKyrZXMhQAEgRBJBUcI',
+    'ttezLxNpUJAGaguDHvQfUUMTzvOzbunM','SRsBaEdsIiZLCCtCxnZgXjpCSuhVftJp',
+    'pciZEuoigQSsRMfDCZFfuUQcciNnCPFW','HqsCbPZXKZBVUhUBUpENFCyllCKfvzyt',
+    'xaGgSpwuvNbGPMWHdcqpugYbedsfRYae','XCSbTlrdrlleLLoJHJndMpNXBQteGKLR',
+    'PcCbdeFCKOzMKjwKMRRXJYXeTGMqwSeF','mFaUtaxfwFQKuojHBDFhbcQrHeIkVGHO',
+    'TTZVrGFdRKPFHeNHqrkuZSEQJtjfHAsA','ekmXugHstJoryqPbYcHLSCQgFhpdkxGC',
+    'FFNmVSWIiNJXZyKjpbcsgfZrDABFwcks','PwXGAhnHUHzanAZQzmJODzPfrCVuQDht',
+    'NuxaKDXaQJZPdLlJDKyMzbOTXvGUVTiS','VqLdwRpClQPPgcDAnpgkqbpVOHpTOZpK',
+    'kDXHHXfwWoDcZVCoEZwQhIwzXqBeXiDT','wUUyhMDjUffruJQATiUNrHpMjpgXeVjT',
+    'DQZFtOgBnJIelZVFYvAuIUsImqIVJyIL','PSgmbZBXZzGOXSLqSzOIutWSeRRAsOHL',
+    'hlKIPWWNnryfsLGjmspPZUHclOdIFaQV','lDLjrKMIoFLKgOQoQUdQtLujPzGPhLiu',
+    'XbaOKLnysztOOGNcXqTfFOoKDtJWguPH','cGZfLBInZDrIWLwJFSTjLaGcAEofskdT',
+    'kgXHHFHaFCCztmlIdluoVaMCdRkgepDd','VaslkrIIqStYueJKEIDLsRvcRccQAbCY',
+    'gBgLuUACpahRXnvWZEEJtfgNyTPyuSgs','LhIQrfgDIYsJYmcXvPrCBAADrUogCACV',
+    'ZYsdZEViYmcKVqLPYzDhpCEHAwqbkNEI','UXYZcbRSCUMzOoMrAwxfdirWsichgmgJ',
+    'ILHwLcSkdWoZspFZgExbOlVrHPfbGYeK','zmrVbBWjBNtHYffObhCvFbPXpecbwpBH',
+    'JIaKRFjfuvrcDjGbIpFBvLNZKLIpplYj','YTyRBFZZBLTqIeVmyoIZrdceDIyfftIt',
+    'aQUebsqHYAZMiuHsYncmEOduXlgVvIBF','xjVJKLsoDXRrUFXwqaLAVHOdySRwVqFy',
+    'BNFKjxXzrVIDaKlSggpWeTetLhObDzwT','KRjMAilaiziBwcERloSVDLGcIeSAsoIY',
+  ],
 }
 
 // Auto-seed keys into Redis if they haven't been seeded yet
 async function ensureKeysSeeded(): Promise<void> {
-  const alreadySeeded = await redis.get('keys:seeded')
+  const alreadySeeded = await redis.get(SEED_FLAG)
   if (alreadySeeded) return
 
-  // Check if any keys exist already (in case seeded flag was lost)
-  const pipeline = redis.pipeline()
-  for (const id of PRODUCT_IDS) {
-    pipeline.llen(`keys:${id}`)
-  }
-  const counts = await pipeline.exec<number[]>()
-  const totalExisting = counts.reduce((sum, c) => sum + (c ?? 0), 0)
-  if (totalExisting > 0) {
-    // Keys exist but flag is missing, set the flag and return
-    await redis.set('keys:seeded', '1')
-    return
-  }
+  // Clear any stale data from previous seeding attempts
+  await redis.del('keys:shadow-weekly', 'keys:shadow-monthly', 'keys:shadow-lifetime', 'keys:seeded', 'keys:seeded:v2')
 
-  // Seed keys
-  const seedPipeline = redis.pipeline()
-  for (const id of PRODUCT_IDS) {
-    const count = DEFAULT_STOCK[id] ?? 50
-    for (let i = 0; i < count; i++) {
-      seedPipeline.rpush(`keys:${id}`, generateKey())
+  // Seed keys in batches of 20 to stay within Upstash pipeline limits
+  for (const productId of PRODUCT_IDS) {
+    const keys = STOCK_KEYS[productId]
+    for (let i = 0; i < keys.length; i += 20) {
+      const batch = keys.slice(i, i + 20)
+      const pipeline = redis.pipeline()
+      for (const key of batch) {
+        pipeline.rpush(`keys:${productId}`, key)
+      }
+      await pipeline.exec()
     }
   }
-  seedPipeline.set('keys:seeded', '1')
-  await seedPipeline.exec()
+
+  await redis.set(SEED_FLAG, '1')
 }
 
 // Get stock count for a specific product
 export async function getStock(productId: string): Promise<number> {
   await ensureKeysSeeded()
-  const len = await redis.llen(`keys:${productId}`)
-  return len
+  return redis.llen(`keys:${productId}`)
 }
 
 // Get stock for all products
@@ -64,7 +132,6 @@ export async function getAllStock(): Promise<Record<string, number>> {
   await ensureKeysSeeded()
 
   const stock: Record<string, number> = {}
-
   const pipeline = redis.pipeline()
   for (const id of PRODUCT_IDS) {
     pipeline.llen(`keys:${id}`)
@@ -74,7 +141,6 @@ export async function getAllStock(): Promise<Record<string, number>> {
   for (let i = 0; i < PRODUCT_IDS.length; i++) {
     stock[PRODUCT_IDS[i]] = results[i] ?? 0
   }
-
   return stock
 }
 
