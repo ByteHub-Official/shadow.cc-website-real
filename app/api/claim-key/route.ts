@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       
       for (let i = 0; i < quantity; i++) {
         // Check stock before claiming
-        const stock = getStock(productId)
+        const stock = await getStock(productId)
         if (stock === 0) {
           return NextResponse.json({ 
             error: `Out of stock for ${productId}`,
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
           }, { status: 400 })
         }
         
-        const key = claimKey(productId)
+        const key = await claimKey(productId)
         if (key) {
           claimedKeys.push({ productId, key })
         } else {
