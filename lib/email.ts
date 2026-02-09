@@ -2,8 +2,9 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const ADMIN_EMAIL = 'support@shadowcc.shop'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'support@shadowcc.shop'
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://shadowcc.shop'
 
 // ── Customer confirmation for custom service orders ──
 export async function sendServiceOrderConfirmation({
@@ -24,9 +25,10 @@ export async function sendServiceOrderConfirmation({
   details: string
 }) {
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: `Shadow.CC <${FROM_EMAIL}>`,
       to: customerEmail,
+      replyTo: ADMIN_EMAIL,
       subject: `Order Confirmed - ${serviceName} (${tierName})`,
       html: `
         <div style="font-family: monospace; background: #030303; color: #e4e4e7; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
@@ -44,11 +46,16 @@ export async function sendServiceOrderConfirmation({
               <p style="color: #71717a; font-size: 10px; letter-spacing: 2px; margin: 0 0 8px 0;">YOUR PROJECT DETAILS</p>
               <p style="color: #d4d4d8; font-size: 13px; white-space: pre-wrap; margin: 0;">${details}</p>
             </div>
-            <p style="color: #a1a1aa; font-size: 14px; margin-bottom: 6px;">
+            <p style="color: #a1a1aa; font-size: 14px; margin-bottom: 20px;">
               We will reach out to you within <strong style="color: #ffffff;">24 hours</strong> to discuss your project and get started.
             </p>
-            <p style="color: #71717a; font-size: 12px; margin-bottom: 20px;">
-              If you have questions, reply to this email or join our Discord.
+            <div style="text-align: center; margin: 28px 0;">
+              <a href="${SITE_URL}/support" style="display: inline-block; background: #dc2626; color: #ffffff; font-family: monospace; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-decoration: none; padding: 14px 32px; border-radius: 6px;">
+                CONTACT SUPPORT
+              </a>
+            </div>
+            <p style="color: #71717a; font-size: 12px; margin-bottom: 20px; text-align: center;">
+              Questions? Reply to this email or join our <a href="https://discord.gg/Kezxm2TyGY" style="color: #dc2626; text-decoration: none;">Discord</a>.
             </p>
             <hr style="border: none; border-top: 1px solid #27272a; margin: 20px 0;" />
             <p style="color: #52525b; font-size: 10px; text-align: center; letter-spacing: 2px; margin: 0;">2026 SHADOW.CC - ALL RIGHTS RESERVED</p>
@@ -56,9 +63,10 @@ export async function sendServiceOrderConfirmation({
         </div>
       `,
     })
+    console.log('[v0] Customer confirmation email result:', JSON.stringify(result))
     return { success: true }
   } catch (error) {
-    console.error('Failed to send customer confirmation email:', error)
+    console.error('[v0] Failed to send customer confirmation email:', error)
     return { success: false, error }
   }
 }
@@ -82,52 +90,59 @@ export async function sendAdminOrderNotification({
   details: string
 }) {
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: `Shadow.CC Orders <${FROM_EMAIL}>`,
       to: ADMIN_EMAIL,
-      subject: `New Order: ${serviceName} - ${tierName} (${tierPrice})`,
+      replyTo: customerEmail,
+      subject: `NEW ORDER: ${serviceName} - ${tierName} from ${customerName}`,
       html: `
         <div style="font-family: monospace; background: #030303; color: #e4e4e7; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
           <div style="border: 1px solid #27272a; border-radius: 8px; padding: 32px; background: #0a0a0a;">
             <div style="text-align: center; margin-bottom: 24px;">
               <h1 style="color: #ffffff; font-size: 20px; margin: 0 0 4px 0; letter-spacing: 2px;">NEW ORDER</h1>
-              <p style="color: #dc2626; font-size: 10px; letter-spacing: 3px; margin: 0;">${serviceName.toUpperCase()} - ${tierName.toUpperCase()}</p>
+              <p style="color: #dc2626; font-size: 10px; letter-spacing: 3px; margin: 0;">${serviceName.toUpperCase()} - ${tierName.toUpperCase()} (${tierPrice})</p>
             </div>
             <hr style="border: none; border-top: 1px solid #27272a; margin: 20px 0;" />
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
               <tr>
-                <td style="color: #71717a; font-size: 11px; padding: 6px 0; letter-spacing: 1px;">NAME</td>
-                <td style="color: #ffffff; font-size: 13px; padding: 6px 0; text-align: right;">${customerName}</td>
+                <td style="color: #71717a; font-size: 11px; padding: 8px 0; letter-spacing: 1px; border-bottom: 1px solid #18181b;">NAME</td>
+                <td style="color: #ffffff; font-size: 13px; padding: 8px 0; text-align: right; border-bottom: 1px solid #18181b;">${customerName}</td>
               </tr>
               <tr>
-                <td style="color: #71717a; font-size: 11px; padding: 6px 0; letter-spacing: 1px;">EMAIL</td>
-                <td style="color: #ffffff; font-size: 13px; padding: 6px 0; text-align: right;">
+                <td style="color: #71717a; font-size: 11px; padding: 8px 0; letter-spacing: 1px; border-bottom: 1px solid #18181b;">EMAIL</td>
+                <td style="color: #ffffff; font-size: 13px; padding: 8px 0; text-align: right; border-bottom: 1px solid #18181b;">
                   <a href="mailto:${customerEmail}" style="color: #dc2626; text-decoration: none;">${customerEmail}</a>
                 </td>
               </tr>
               <tr>
-                <td style="color: #71717a; font-size: 11px; padding: 6px 0; letter-spacing: 1px;">DISCORD</td>
-                <td style="color: #ffffff; font-size: 13px; padding: 6px 0; text-align: right;">${discord || 'Not provided'}</td>
+                <td style="color: #71717a; font-size: 11px; padding: 8px 0; letter-spacing: 1px; border-bottom: 1px solid #18181b;">DISCORD</td>
+                <td style="color: #ffffff; font-size: 13px; padding: 8px 0; text-align: right; border-bottom: 1px solid #18181b;">${discord || 'Not provided'}</td>
               </tr>
               <tr>
-                <td style="color: #71717a; font-size: 11px; padding: 6px 0; letter-spacing: 1px;">TIER</td>
-                <td style="color: #ffffff; font-size: 13px; padding: 6px 0; text-align: right;">${tierName} (${tierPrice})</td>
+                <td style="color: #71717a; font-size: 11px; padding: 8px 0; letter-spacing: 1px;">TIER</td>
+                <td style="color: #ffffff; font-size: 13px; padding: 8px 0; text-align: right;">${tierName} (${tierPrice})</td>
               </tr>
             </table>
-            <div style="background: #030303; border: 1px solid #27272a; border-radius: 6px; padding: 16px; margin-bottom: 20px;">
+            <div style="background: #030303; border: 1px solid #27272a; border-radius: 6px; padding: 16px; margin-bottom: 24px;">
               <p style="color: #71717a; font-size: 10px; letter-spacing: 2px; margin: 0 0 8px 0;">PROJECT DETAILS</p>
               <p style="color: #d4d4d8; font-size: 13px; white-space: pre-wrap; margin: 0;">${details}</p>
             </div>
-            <p style="color: #a1a1aa; font-size: 12px;">
-              Reply directly to the customer at <a href="mailto:${customerEmail}" style="color: #dc2626;">${customerEmail}</a>${discord ? ` or reach them on Discord: ${discord}` : ''}.
+            <div style="text-align: center; margin: 28px 0;">
+              <a href="mailto:${customerEmail}?subject=Re: ${encodeURIComponent(`${serviceName} - ${tierName} Order`)}&body=${encodeURIComponent(`Hi ${customerName},\n\nThanks for your ${serviceName} order. I'd like to discuss your project.\n\n`)}" style="display: inline-block; background: #dc2626; color: #ffffff; font-family: monospace; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-decoration: none; padding: 14px 32px; border-radius: 6px;">
+                REPLY TO CUSTOMER
+              </a>
+            </div>
+            <p style="color: #71717a; font-size: 11px; text-align: center;">
+              Click the button above to reach out to the customer directly.
             </p>
           </div>
         </div>
       `,
     })
+    console.log('[v0] Admin notification email result:', JSON.stringify(result))
     return { success: true }
   } catch (error) {
-    console.error('Failed to send admin notification email:', error)
+    console.error('[v0] Failed to send admin notification email:', error)
     return { success: false, error }
   }
 }
@@ -158,9 +173,10 @@ export async function sendKeyDeliveryEmail({
     .join('')
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: `Shadow.CC <${FROM_EMAIL}>`,
       to: customerEmail,
+      replyTo: ADMIN_EMAIL,
       subject: `Your Shadow.CC License Key${keys.length > 1 ? 's' : ''}`,
       html: `
         <div style="font-family: monospace; background: #030303; color: #e4e4e7; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
@@ -177,7 +193,7 @@ export async function sendKeyDeliveryEmail({
                 Save your key${keys.length > 1 ? 's' : ''} now. Keys are tied to your HWID and cannot be recovered if lost.
               </p>
             </div>
-            <div style="background: #030303; border: 1px solid #27272a; border-radius: 6px; padding: 16px; margin-bottom: 20px;">
+            <div style="background: #030303; border: 1px solid #27272a; border-radius: 6px; padding: 16px; margin-bottom: 24px;">
               <p style="color: #71717a; font-size: 10px; letter-spacing: 2px; margin: 0 0 8px 0;">HOW TO REDEEM</p>
               <ol style="color: #a1a1aa; font-size: 12px; margin: 0; padding-left: 16px;">
                 <li style="margin-bottom: 4px;">Open your executor and load the script</li>
@@ -185,15 +201,21 @@ export async function sendKeyDeliveryEmail({
                 <li>Click verify and enjoy the features</li>
               </ol>
             </div>
+            <div style="text-align: center; margin: 28px 0;">
+              <a href="${SITE_URL}/support" style="display: inline-block; background: #dc2626; color: #ffffff; font-family: monospace; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-decoration: none; padding: 14px 32px; border-radius: 6px;">
+                NEED HELP?
+              </a>
+            </div>
             <hr style="border: none; border-top: 1px solid #27272a; margin: 20px 0;" />
             <p style="color: #52525b; font-size: 10px; text-align: center; letter-spacing: 2px; margin: 0;">2026 SHADOW.CC - ALL RIGHTS RESERVED</p>
           </div>
         </div>
       `,
     })
+    console.log('[v0] Key delivery email result:', JSON.stringify(result))
     return { success: true }
   } catch (error) {
-    console.error('Failed to send key delivery email:', error)
+    console.error('[v0] Failed to send key delivery email:', error)
     return { success: false, error }
   }
 }
